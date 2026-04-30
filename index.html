@@ -366,7 +366,7 @@ code{background:rgba(75,123,245,.18);color:var(--ac2);padding:1px 5px;border-rad
 
   <div class="footer">
     <div><strong>CB Seguros | Cascais</strong> — Incentivos 2026 · <span id="src-lbl">Dados locais</span></div>
-    <div>⚠ Provisório · Comparativo YTD: Jan–Mês 2026 vs Jan–Mês 2025 (mesmos meses) · Sin.: YTD÷nº meses · Gate: Auto, Saúde+AP, VR, MR</div>
+    <div>Comparativo: Jan–Mês 2026 vs Jan–Mês 2025 (mesmos meses) · Sin.: YTD÷nº meses · Gate: Auto, Saúde+AP, VR, MR</div>
   </div>
 
 </div><!-- /main -->
@@ -1167,329 +1167,215 @@ function exportReport(){
   const md=getMD(code);
   const monthLbl=MONTHS[CUR_MONTH-1];
   const ramosAtivos=GROUPS.filter(([gk])=>md.ramos&&md.ramos[gk]&&(md.ramos[gk].cob26>0||md.ramos[gk].cob25>0)).map(([gk])=>gk);
-
   const win=window.open("","_blank");
 
-  // Build chart data for cobranças by ramo
-  const ramoLabels = ramosAtivos.map(gk=>md.ramos[gk].label);
-  const ramoCob26  = ramosAtivos.map(gk=>md.ramos[gk].cob26);
-  const ramoOsc    = ramosAtivos.map(gk=>md.ramos[gk].osc);
-  const ramoPremio = ramosAtivos.map(gk=>md.ramos[gk].premio);
-  const ramoColors = ramosAtivos.map(gk=>GROUP_COLORS[gk]||'#4B7BF5');
+  // Data for charts
+  const ramoLabels=ramosAtivos.map(gk=>md.ramos[gk].label);
+  const ramoCob26=ramosAtivos.map(gk=>md.ramos[gk].cob26);
+  const ramoOsc=ramosAtivos.map(gk=>md.ramos[gk].osc);
+  const ramoColors=ramosAtivos.map(gk=>GROUP_COLORS[gk]||"#4B7BF5");
 
-  // Build rows
-  let T26=0,T25=0,TC=0,TCt=0,TP=0;
+  // Table rows
+  let T26=0,T25=0,TP=0,TC=0;
   const rows=ramosAtivos.map(gk=>{
-    const rv=md.ramos[gk];T26+=rv.cob26;T25+=rv.cob25;TC+=rv.premioCresc;TCt+=rv.premioCart;TP+=rv.premio;
-    const oscCls=rv.osc>=0?'#059669':'#DC2626';
-    return `<tr>
-      <td><span style="display:inline-block;width:10px;height:10px;border-radius:50%;background:${GROUP_COLORS[gk]||'#4B7BF5'};margin-right:6px"></span>${rv.label}${rv.gate_ramo?'<span style="font-size:9px;color:#94A3B8;margin-left:4px">(gate)</span>':''}</td>
-      <td style="text-align:right">${rv.cob26.toLocaleString("pt-PT",{minimumFractionDigits:2})} €</td>
-      <td style="text-align:right">${rv.cob25.toLocaleString("pt-PT",{minimumFractionDigits:2})} €</td>
-      <td style="text-align:right;color:${oscCls};font-weight:600">${rv.osc>=0?"+":""}${rv.osc.toLocaleString("pt-PT",{minimumFractionDigits:2})} €</td>
-      <td style="text-align:center">${rv.escalao}</td>
-      <td style="text-align:right;color:${rv.premio>0?'#059669':'#94A3B8'};font-weight:${rv.premio>0?'700':'400'}">${rv.premio>0?rv.premio.toFixed(2).replace(".",",")+" €":"—"}</td>
-    </tr>`;
+    const rv=md.ramos[gk];
+    T26+=rv.cob26;T25+=rv.cob25;TP+=rv.premio;TC+=rv.premioCresc;
+    const oscColor=rv.osc>=0?"#059669":"#DC2626";
+    const prmStr=rv.premio>0?rv.premio.toFixed(2).replace(".",",")+" €":"—";
+    return "<tr><td><span style='display:inline-block;width:10px;height:10px;border-radius:50%;background:"+(GROUP_COLORS[gk]||"#4B7BF5")+";margin-right:6px'></span>"
+      +rv.label+(rv.gate_ramo?"<span style='font-size:9px;color:#94A3B8;margin-left:4px'>(gate)</span>":"")+"</td>"
+      +"<td style='text-align:right'>"+rv.cob26.toLocaleString("pt-PT",{minimumFractionDigits:2})+" €</td>"
+      +"<td style='text-align:right'>"+rv.cob25.toLocaleString("pt-PT",{minimumFractionDigits:2})+" €</td>"
+      +"<td style='text-align:right;color:"+oscColor+";font-weight:600'>"+(rv.osc>=0?"+":"")+rv.osc.toLocaleString("pt-PT",{minimumFractionDigits:2})+" €</td>"
+      +"<td style='text-align:center'>"+rv.escalao+"</td>"
+      +"<td style='text-align:right;color:"+(rv.premio>0?"#059669":"#94A3B8")+";font-weight:"+(rv.premio>0?"700":"400")+"'>"+prmStr+"</td></tr>";
   }).join("");
 
-  win.document.write(`<!DOCTYPE html>
-<html lang="pt"><head><meta charset="UTF-8">
-<title>CB Seguros — Incentivos ${p.name} — ${monthLbl} 2026</title>
-<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"><\/script>
-<style>
-  @import url('https://fonts.googleapis.com/css2?family=Barlow:wght@400;500;600;700;800&family=Barlow+Condensed:wght@600;700;800&display=swap');
-  *{box-sizing:border-box;margin:0;padding:0}
-  body{font-family:'Barlow',sans-serif;color:#1E293B;background:#F8FAFC;padding:0;font-size:12px}
-  .page{max-width:900px;margin:0 auto;padding:24px 28px 40px;background:#fff;min-height:100vh}
-  .no-print{margin-bottom:16px;padding:10px 14px;background:#EFF6FF;border-radius:8px;display:flex;justify-content:space-between;align-items:center}
-  .btn-print{background:#2F5CE0;color:#fff;border:none;border-radius:6px;padding:8px 18px;font-family:'Barlow',sans-serif;font-size:12px;font-weight:600;cursor:pointer}
-  /* HEADER */
-  .hdr{display:flex;justify-content:space-between;align-items:flex-start;padding-bottom:16px;border-bottom:2px solid #0B1326;margin-bottom:20px}
-  .hdr-left{display:flex;align-items:center;gap:14px}
-  .report-title{font-family:'Barlow Condensed',sans-serif;font-size:22px;font-weight:800;color:#0B1326;letter-spacing:.03em}
-  .report-sub{font-size:11px;color:#64748B;margin-top:3px}
-  /* PARTNER BOX */
-  .pbox{background:#EFF6FF;border:1.5px solid #2F5CE0;border-radius:10px;padding:14px 18px;margin-bottom:18px;display:flex;justify-content:space-between;align-items:center}
-  .pname{font-size:17px;font-weight:700;color:#0B1326}
-  .pmeta{font-size:11px;color:#475569;margin-top:4px;display:flex;gap:16px;flex-wrap:wrap}
-  /* GATE WARNING */
-  .gate-warn{background:#FEF2F2;border:1.5px solid #EF4444;border-radius:8px;padding:12px 16px;margin-bottom:16px;display:flex;gap:10px;align-items:flex-start}
-  /* KPI GRID */
-  .kpi4{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin-bottom:18px}
-  .kpi{border:1px solid #E2E8F0;border-radius:10px;padding:12px;text-align:center;background:#fff}
-  .kv{font-family:'Barlow Condensed',sans-serif;font-size:24px;font-weight:800;line-height:1}
-  .kl{font-size:9px;color:#94A3B8;text-transform:uppercase;letter-spacing:.07em;margin-top:3px}
-  /* SECTION */
-  .section{margin-bottom:20px}
-  .section-title{font-family:'Barlow Condensed',sans-serif;font-size:12px;font-weight:700;text-transform:uppercase;letter-spacing:.1em;color:#475569;margin-bottom:10px;padding-bottom:5px;border-bottom:1px solid #E2E8F0}
-  /* CHARTS GRID */
-  .charts-row{display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-bottom:18px}
-  .chart-box{border:1px solid #E2E8F0;border-radius:10px;padding:14px;background:#fff}
-  .chart-title{font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.08em;color:#64748B;margin-bottom:10px}
-  .chart-wrap{position:relative;height:200px}
-  /* SINISTRALIDADE ROW */
-  .sin-row{display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-bottom:18px}
-  .sin-box{border:1px solid #E2E8F0;border-radius:10px;padding:14px;background:#fff}
-  .big-num{font-family:'Barlow Condensed',sans-serif;font-size:28px;font-weight:800;line-height:1;margin-bottom:4px}
-  .sint-bar{margin-bottom:6px}
-  .sint-bar-lbl{display:flex;justify-content:space-between;font-size:10px;margin-bottom:2px}
-  .sint-bar-bg{background:#F1F5F9;border-radius:2px;height:6px;overflow:hidden}
-  .sint-bar-fill{height:100%;background:linear-gradient(90deg,#EF4444,#F87171);border-radius:2px}
-  /* ESCALAO GRID */
-  .escgrid{display:grid;grid-template-columns:repeat(5,1fr);gap:4px;margin-top:8px;margin-bottom:10px}
-  .esbox{border:1px solid #E2E8F0;border-radius:5px;padding:5px 3px;text-align:center;font-size:8px;color:#94A3B8}
-  .esbox.act{border-color:#059669;background:#ECFDF5;color:#059669;font-weight:700}
-  .esbox-v{font-family:'Barlow Condensed',sans-serif;font-size:13px;font-weight:700;display:block}
-  /* TABLE */
-  table{width:100%;border-collapse:collapse;font-size:11px}
-  th{background:#F8FAFC;padding:7px 10px;font-size:9px;font-weight:700;text-transform:uppercase;letter-spacing:.07em;color:#64748B;border-bottom:1.5px solid #E2E8F0;text-align:left}
-  td{padding:7px 10px;border-bottom:.5px solid #F1F5F9;vertical-align:middle}
-  tr.tot td{background:#F8FAFC;font-weight:700;border-top:1.5px solid #0B1326;color:#0B1326}
-  tr.rent-row td{background:#F8FAFC;font-size:10px;color:#475569}
-  tr.grand td{background:#ECFDF5;font-weight:800;color:#059669;font-family:'Barlow Condensed',sans-serif;font-size:15px;border-top:1.5px solid #059669}
-  /* MONTHLY CHART */
-  .monthly-box{border:1px solid #E2E8F0;border-radius:10px;padding:14px;background:#fff;margin-bottom:18px}
-  /* FOOTER */
-  .footer-note{margin-top:24px;padding-top:12px;border-top:1px solid #E2E8F0;font-size:9px;color:#94A3B8;text-align:center;line-height:1.6}
-  @media print{
-    .no-print{display:none!important}
-    body{background:#fff}
-    .page{padding:14px 18px}
-    .charts-row,.sin-row,.kpi4{break-inside:avoid}
-  }
-</style></head><body>
-<div class="page">
+  // Gate warning HTML
+  const gateHtml=md.gate_fail
+    ?"<div class='gate-warn'><span style='font-size:18px'>⛔</span><div>"
+      +"<strong style='color:#DC2626'>Prémio Bloqueado — Gate não cumprido</strong><br>"
+      +"<span style='font-size:11px;color:#475569'>Motivo: "
+      +(md.gate_ramos_neg||[]).map(g=>(md.ramos&&md.ramos[g]&&md.ramos[g].gate_absent?g+" (sem produção)":g+" (oscilação negativa)")).join(" · ")
+      +"</span></div></div>"
+    :"";
 
-<div class="no-print">
-  <span style="font-size:12px;color:#0B1326;font-weight:600">CB Seguros | Cascais — Relatório de Incentivos 2026</span>
-  <button class="btn-print" onclick="window.print()">🖨️ Imprimir / Guardar PDF</button>
-</div>
+  // Escalão grid
+  const escData=[[0,25,0],[25,35,0.25],[35,45,0.75],[45,65,1],[65,null,2]];
+  const escHtml=escData.map(function(e){
+    const lo=e[0],hi=e[1],pct=e[2];
+    const act=md.taxa_rent>=lo&&(hi===null||md.taxa_rent<hi);
+    return "<div class='esbox "+(act?"act":"")+"'><span class='esbox-v'>"+pct+"%</span>"+lo+(hi?"–"+hi:"+")+"%</div>";
+  }).join("");
 
-<!-- HEADER -->
-<div class="hdr">
-  <div class="hdr-left">
-    <svg viewBox="0 0 230 195" width="70" height="60" xmlns="http://www.w3.org/2000/svg">
-      <path d="M 78 12 A 68 68 0 1 0 78 148" fill="none" stroke="#0B1326" stroke-width="13" stroke-linecap="round"/>
-      <path d="M 72 34 A 46 46 0 1 0 72 126" fill="none" stroke="rgba(11,19,38,.35)" stroke-width="7" stroke-linecap="round"/>
-      <line x1="118" y1="14" x2="118" y2="146" stroke="#0B1326" stroke-width="13" stroke-linecap="round"/>
-      <path d="M118 14 C118 14,178 10,178 52 C178 94,118 90,118 90" fill="none" stroke="#0B1326" stroke-width="10" stroke-linecap="round"/>
-      <path d="M118 90 C118 90,190 86,190 118 C190 148,118 146,118 146" fill="none" stroke="#0B1326" stroke-width="10" stroke-linecap="round"/>
-      <text x="119" y="175" text-anchor="middle" font-family="Barlow Condensed,sans-serif" font-size="12" font-weight="600" letter-spacing="3" fill="rgba(11,19,38,.55)">SEGUROS | CASCAIS</text>
-    </svg>
-    <div>
-      <div class="report-title">Relatório de Incentivos 2026</div>
-      <div class="report-sub">Período: Jan–${monthLbl} 2026 &nbsp;·&nbsp; Emitido: ${new Date().toLocaleDateString("pt-PT")} &nbsp;·&nbsp; Ref: Generali Tranquilidade</div>
-    </div>
-  </div>
-  <div style="text-align:right;font-size:11px;color:#475569">
-    <div style="font-size:13px;font-weight:700;color:#2F5CE0">CONFIDENCIAL</div>
-    <div>Para uso interno do parceiro</div>
-  </div>
-</div>
+  // Sin bars
+  const sinEntries=Object.entries(md.sin_ytd_by_ramo||{}).filter(function(e){return e[1]!==0;}).sort(function(a,b){return a[1]-b[1];});
+  const sinHtml=sinEntries.map(function(e){
+    const r=e[0],v=e[1];
+    const pct=Math.min(Math.abs(v)/(Math.abs(md.sin_total_ytd)||1)*100,100).toFixed(1);
+    return "<div class='sint-bar'><div class='sint-bar-lbl'><span>"+r+"</span><span style='color:#EF4444;font-weight:600'>"+Math.abs(v).toLocaleString("pt-PT",{minimumFractionDigits:0})+" €</span></div>"
+      +"<div class='sint-bar-bg'><div class='sint-bar-fill' style='width:"+pct+"%'></div></div></div>";
+  }).join("");
 
-<!-- PARTNER -->
-<div class="pbox">
-  <div>
-    <div class="pname">${p.name}</div>
-    <div class="pmeta">
-      <span><strong>Código:</strong> ${code}</span>
-      <span><strong>Período 2026:</strong> Jan–${monthLbl}</span>
-      <span><strong>Base comparação:</strong> Jan–${monthLbl} 2025 (${CUR_MONTH} meses)</span>
-      <span><strong>Zona:</strong> DIR REG CASCAIS / SINTRA</span>
-    </div>
-  </div>
-  <div style="text-align:right">
-    <div style="font-family:'Barlow Condensed',sans-serif;font-size:28px;font-weight:800;color:${md.total_premio>0?'#059669':'#EF4444'}">${md.total_premio.toFixed(2).replace(".",",")} €</div>
-    <div style="font-size:10px;color:#475569">${md.gate_fail?"⛔ Prémio Bloqueado":"🏆 Prémio Total Estimado"}</div>
-  </div>
-</div>
+  // Monthly data
+  const monthLabels=Array.from({length:CUR_MONTH},function(_,i){return MONTHS[i];});
+  const monthly25=Array.from({length:CUR_MONTH},function(_,i){return p.monthly_cob25[i]||0;});
+  const monthly26=Array.from({length:CUR_MONTH},function(_,i){return p.monthly_cob26[i]||0;});
+  const taxa=md.taxa_rent;
+  const premioColor=md.total_premio>0?"#059669":"#EF4444";
+  const oscColor2=md.total_osc>=0?"#059669":"#DC2626";
+  const rentColor=taxa>=65?"#059669":taxa>=45?"#D97706":"#DC2626";
 
-${md.gate_fail?`<div class="gate-warn">
-  <span style="font-size:18px">⛔</span>
-  <div><strong style="color:#DC2626">Prémio Bloqueado — Gate não cumprido</strong><br>
-  <span style="font-size:11px;color:#475569">Para aceder ao prémio, são necessárias oscilações positivas <em>e produção activa</em> em todos os ramos principais: Automóvel · Saúde+AP · Vida Risco · Multirriscos.<br>
-  <strong>Motivo:</strong> ${(md.gate_ramos_neg||[]).map(g=>(md.ramos?.[g]?.gate_absent?g+" (sem produção)":g+" (oscilação negativa)")).join(" · ")}</span>
-  </div>
-</div>`:""}
+  const html="<!DOCTYPE html><html lang='pt'><head><meta charset='UTF-8'>"
+    +"<title>CB Seguros — Incentivos "+p.name+" — "+monthLbl+" 2026</title>"
+    +"<script src='https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js'><\/script>"
+    +"<style>"
+    +"@import url('https://fonts.googleapis.com/css2?family=Barlow:wght@400;500;600;700;800&family=Barlow+Condensed:wght@600;700;800&display=swap');"
+    +"*{box-sizing:border-box;margin:0;padding:0}body{font-family:'Barlow',sans-serif;color:#1E293B;background:#F8FAFC;font-size:12px}"
+    +".page{max-width:900px;margin:0 auto;padding:24px 28px 40px;background:#fff;min-height:100vh}"
+    +".no-print{margin-bottom:16px;padding:10px 14px;background:#EFF6FF;border-radius:8px;display:flex;justify-content:space-between;align-items:center}"
+    +".btn-print{background:#2F5CE0;color:#fff;border:none;border-radius:6px;padding:8px 18px;font-family:'Barlow',sans-serif;font-size:12px;font-weight:600;cursor:pointer}"
+    +".hdr{display:flex;justify-content:space-between;align-items:flex-start;padding-bottom:16px;border-bottom:2px solid #0B1326;margin-bottom:20px}"
+    +".hdr-left{display:flex;align-items:center;gap:14px}"
+    +".report-title{font-family:'Barlow Condensed',sans-serif;font-size:22px;font-weight:800;color:#0B1326;letter-spacing:.03em}"
+    +".report-sub{font-size:11px;color:#64748B;margin-top:3px}"
+    +".pbox{background:#EFF6FF;border:1.5px solid #2F5CE0;border-radius:10px;padding:14px 18px;margin-bottom:18px;display:flex;justify-content:space-between;align-items:center}"
+    +".pname{font-size:17px;font-weight:700;color:#0B1326}"
+    +".pmeta{font-size:11px;color:#475569;margin-top:4px;display:flex;gap:16px;flex-wrap:wrap}"
+    +".gate-warn{background:#FEF2F2;border:1.5px solid #EF4444;border-radius:8px;padding:12px 16px;margin-bottom:16px;display:flex;gap:10px;align-items:flex-start}"
+    +".kpi4{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin-bottom:18px}"
+    +".kpi{border:1px solid #E2E8F0;border-radius:10px;padding:12px;text-align:center;background:#fff}"
+    +".kv{font-family:'Barlow Condensed',sans-serif;font-size:24px;font-weight:800;line-height:1}"
+    +".kl{font-size:9px;color:#94A3B8;text-transform:uppercase;letter-spacing:.07em;margin-top:3px}"
+    +".charts-row{display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-bottom:18px}"
+    +".chart-box{border:1px solid #E2E8F0;border-radius:10px;padding:14px;background:#fff}"
+    +".chart-title{font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.08em;color:#64748B;margin-bottom:10px}"
+    +".chart-wrap{position:relative;height:200px}"
+    +".monthly-box{border:1px solid #E2E8F0;border-radius:10px;padding:14px;background:#fff;margin-bottom:18px}"
+    +".sin-row{display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-bottom:18px}"
+    +".sin-box{border:1px solid #E2E8F0;border-radius:10px;padding:14px;background:#fff}"
+    +".big-num{font-family:'Barlow Condensed',sans-serif;font-size:28px;font-weight:800;line-height:1;margin-bottom:4px}"
+    +".sint-bar{margin-bottom:6px}.sint-bar-lbl{display:flex;justify-content:space-between;font-size:10px;margin-bottom:2px}"
+    +".sint-bar-bg{background:#F1F5F9;border-radius:2px;height:6px;overflow:hidden}"
+    +".sint-bar-fill{height:100%;background:linear-gradient(90deg,#EF4444,#F87171);border-radius:2px}"
+    +".escgrid{display:grid;grid-template-columns:repeat(5,1fr);gap:4px;margin:8px 0 10px}"
+    +".esbox{border:1px solid #E2E8F0;border-radius:5px;padding:5px 3px;text-align:center;font-size:8px;color:#94A3B8}"
+    +".esbox.act{border-color:#059669;background:#ECFDF5;color:#059669;font-weight:700}"
+    +".esbox-v{font-family:'Barlow Condensed',sans-serif;font-size:13px;font-weight:700;display:block}"
+    +".section-title{font-family:'Barlow Condensed',sans-serif;font-size:12px;font-weight:700;text-transform:uppercase;letter-spacing:.1em;color:#475569;margin-bottom:10px;padding-bottom:5px;border-bottom:1px solid #E2E8F0}"
+    +"table{width:100%;border-collapse:collapse;font-size:11px}"
+    +"th{background:#F8FAFC;padding:7px 10px;font-size:9px;font-weight:700;text-transform:uppercase;letter-spacing:.07em;color:#64748B;border-bottom:1.5px solid #E2E8F0;text-align:left}"
+    +"td{padding:7px 10px;border-bottom:.5px solid #F1F5F9;vertical-align:middle}"
+    +"tr.tot td{background:#F8FAFC;font-weight:700;border-top:1.5px solid #0B1326;color:#0B1326}"
+    +"tr.rent-row td{background:#F8FAFC;font-size:10px;color:#475569}"
+    +"tr.grand td{background:#ECFDF5;font-weight:800;color:#059669;font-family:'Barlow Condensed',sans-serif;font-size:15px;border-top:1.5px solid #059669}"
+    +".footer-note{margin-top:24px;padding-top:12px;border-top:1px solid #E2E8F0;font-size:9px;color:#94A3B8;text-align:center;line-height:1.6}"
+    +"@media print{.no-print{display:none!important}body{background:#fff}.page{padding:14px 18px}}"
+    +"</style></head><body><div class='page'>"
+    +"<div class='no-print'><span style='font-size:12px;color:#0B1326;font-weight:600'>CB Seguros | Cascais — Relatório de Incentivos 2026</span>"
+    +"<button class='btn-print' onclick='window.print()'>🖨️ Imprimir / Guardar PDF</button></div>"
+    // Header
+    +"<div class='hdr'><div class='hdr-left'>"
+    +"<svg viewBox='0 0 230 195' width='70' height='60' xmlns='http://www.w3.org/2000/svg'>"
+    +"<path d='M 78 12 A 68 68 0 1 0 78 148' fill='none' stroke='#0B1326' stroke-width='13' stroke-linecap='round'/>"
+    +"<path d='M 72 34 A 46 46 0 1 0 72 126' fill='none' stroke='rgba(11,19,38,.35)' stroke-width='7' stroke-linecap='round'/>"
+    +"<line x1='118' y1='14' x2='118' y2='146' stroke='#0B1326' stroke-width='13' stroke-linecap='round'/>"
+    +"<path d='M118 14 C118 14,178 10,178 52 C178 94,118 90,118 90' fill='none' stroke='#0B1326' stroke-width='10' stroke-linecap='round'/>"
+    +"<path d='M118 90 C118 90,190 86,190 118 C190 148,118 146,118 146' fill='none' stroke='#0B1326' stroke-width='10' stroke-linecap='round'/>"
+    +"<text x='119' y='175' text-anchor='middle' font-family='Barlow Condensed,sans-serif' font-size='12' font-weight='600' letter-spacing='3' fill='rgba(11,19,38,.55)'>SEGUROS | CASCAIS</text></svg>"
+    +"<div><div class='report-title'>Relatório de Incentivos 2026</div>"
+    +"<div class='report-sub'>Período: Jan–"+monthLbl+" 2026 &nbsp;·&nbsp; Emitido: "+new Date().toLocaleDateString("pt-PT")+" &nbsp;·&nbsp; Ref: Generali Tranquilidade</div>"
+    +"</div></div>"
+    +"<div style='text-align:right;font-size:11px;color:#475569'><div style='font-size:13px;font-weight:700;color:#2F5CE0'>CONFIDENCIAL</div><div>Para uso interno do parceiro</div></div></div>"
+    // Partner box
+    +"<div class='pbox'><div>"
+    +"<div class='pname'>"+p.name+"</div>"
+    +"<div class='pmeta'><span><strong>Código:</strong> "+code+"</span>"
+    +"<span><strong>Período 2026:</strong> Jan–"+monthLbl+"</span>"
+    +"<span><strong>Base comparação:</strong> Jan–"+monthLbl+" 2025 ("+CUR_MONTH+" meses)</span>"
+    +"<span><strong>Zona:</strong> DIR REG CASCAIS / SINTRA</span></div></div>"
+    +"<div style='text-align:right'>"
+    +"<div style='font-family:Barlow Condensed,sans-serif;font-size:28px;font-weight:800;color:"+premioColor+"'>"+md.total_premio.toFixed(2).replace(".",",")+" €</div>"
+    +"<div style='font-size:10px;color:#475569'>"+(md.gate_fail?"⛔ Prémio Bloqueado":"🏆 Prémio Total Estimado")+"</div>"
+    +"</div></div>"
+    +gateHtml
+    // KPIs
+    +"<div class='kpi4'>"
+    +"<div class='kpi'><div class='kv'>"+md.total_cob26.toLocaleString("pt-PT",{minimumFractionDigits:0})+" €</div><div class='kl'>Cobranças Jan–"+monthLbl+" 2026</div></div>"
+    +"<div class='kpi'><div class='kv' style='color:#475569'>"+md.total_cob25.toLocaleString("pt-PT",{minimumFractionDigits:0})+" €</div><div class='kl'>Cobranças Jan–"+monthLbl+" 2025</div></div>"
+    +"<div class='kpi'><div class='kv' style='color:"+oscColor2+"'>"+(md.total_osc>=0?"+":"")+md.total_osc.toLocaleString("pt-PT",{minimumFractionDigits:0})+" €</div><div class='kl'>Oscilação YTD</div></div>"
+    +"<div class='kpi'><div class='kv' style='color:"+rentColor+"'>"+taxa.toFixed(1)+"%</div><div class='kl'>Taxa Rentabilidade</div></div>"
+    +"</div>"
+    // Charts
+    +"<div class='section-title'>Análise Gráfica</div>"
+    +"<div class='charts-row'>"
+    +"<div class='chart-box'><div class='chart-title'>Cobranças por Grupo — Jan–"+monthLbl+" 2026</div><div class='chart-wrap'><canvas id='ramoChart'></canvas></div></div>"
+    +"<div class='chart-box'><div class='chart-title'>Oscilação por Grupo vs 2025</div><div class='chart-wrap'><canvas id='oscChart'></canvas></div></div>"
+    +"</div>"
+    +"<div class='monthly-box'>"
+    +"<div class='chart-title'>Evolução Mensal de Cobranças — 2025 vs 2026</div>"
+    +"<div style='position:relative;height:180px'><canvas id='monthlyChart'></canvas></div>"
+    +"<div style='display:flex;gap:14px;justify-content:center;margin-top:6px'>"
+    +"<span style='display:flex;align-items:center;gap:4px;font-size:10px;color:#475569'><span style='width:12px;height:4px;background:#4B7BF5;display:inline-block;border-radius:2px'></span>2025</span>"
+    +"<span style='display:flex;align-items:center;gap:4px;font-size:10px;color:#475569'><span style='width:12px;height:4px;background:#059669;display:inline-block;border-radius:2px'></span>2026</span>"
+    +"</div></div>"
+    // Sin + Rent
+    +"<div class='sin-row'>"
+    +"<div class='sin-box'>"
+    +"<div class='chart-title'>Sinistralidade (YTD "+monthLbl+")</div>"
+    +"<div class='big-num' style='color:#EF4444'>"+Math.abs(md.sin_total_ytd||0).toLocaleString("pt-PT",{minimumFractionDigits:0})+" €</div>"
+    +"<div style='font-size:10px;color:#94A3B8;margin-bottom:10px'>"+(md.total_cob26>0?(Math.abs(md.sin_total_ytd||0)/md.total_cob26*100).toFixed(1):"0")+"% das cobranças</div>"
+    +sinHtml
+    +"<table style='margin-top:10px;font-size:10px'>"
+    +"<tr><td style='color:#475569;padding:2px 0;border:none'>Sinistros YTD</td><td style='text-align:right;color:#EF4444;padding:2px 0;border:none'>"+Math.abs(md.sin_total_ytd||0).toLocaleString("pt-PT",{minimumFractionDigits:0})+" €</td></tr>"
+    +"<tr><td style='color:#475569;padding:2px 0;border:none'>Comissões YTD</td><td style='text-align:right;padding:2px 0;border:none'>"+(md.comissoes||0).toLocaleString("pt-PT",{minimumFractionDigits:0})+" €</td></tr>"
+    +"<tr><td style='color:#0B1326;font-weight:700;padding:2px 0;border:none'>Margem Comercial</td><td style='text-align:right;font-weight:700;color:"+((md.margem_val||0)>=0?"#059669":"#EF4444")+";padding:2px 0;border:none'>"+(md.margem_val||0).toLocaleString("pt-PT",{minimumFractionDigits:0})+" €</td></tr>"
+    +"</table></div>"
+    +"<div class='sin-box'>"
+    +"<div class='chart-title'>Rentabilidade</div>"
+    +"<div class='big-num' style='color:"+rentColor+"'>"+taxa.toFixed(1)+"%</div>"
+    +"<div style='font-size:10px;color:#94A3B8;margin-bottom:8px'>(Cob. − Sin. − Com.) ÷ Cob.</div>"
+    +"<div class='escgrid'>"+escHtml+"</div>"
+    +"<div style='position:relative;height:110px;margin-top:8px'><canvas id='rentChart'></canvas></div>"
+    +"<div style='margin-top:8px;font-size:11px;font-weight:700;color:"+(md.gate_fail?"#EF4444":"#059669")+"'>"
+    +"Prémio Rentabilidade: "+(md.gate_fail?"⛔ 0,00 €":md.premio_rent.toFixed(2).replace(".",",")+" €")+"</div>"
+    +"</div></div>"
+    // Table
+    +"<div class='section-title'>Decomposição de Prémios por Grupo de Ramo</div>"
+    +"<table><thead><tr>"
+    +"<th>Grupo de Ramo</th><th style='text-align:right'>Cob. 2026</th><th style='text-align:right'>Cob. 2025</th>"
+    +"<th style='text-align:right'>Oscilação</th><th style='text-align:center'>Escalão</th><th style='text-align:right'>Prémio</th>"
+    +"</tr></thead><tbody>"+rows+"</tbody><tfoot>"
+    +"<tr class='tot'><td>Total Crescimento</td>"
+    +"<td style='text-align:right'>"+T26.toLocaleString("pt-PT",{minimumFractionDigits:2})+" €</td>"
+    +"<td style='text-align:right'>"+T25.toLocaleString("pt-PT",{minimumFractionDigits:2})+" €</td>"
+    +"<td style='text-align:right;color:"+((T26-T25)>=0?"#059669":"#DC2626")+"'>"+(T26-T25>=0?"+":"")+(T26-T25).toLocaleString("pt-PT",{minimumFractionDigits:2})+" €</td>"
+    +"<td>—</td><td style='text-align:right'>"+TP.toFixed(2).replace(".",",")+" €</td></tr>"
+    +"<tr class='rent-row'><td colspan='5'>+ Prémio Rentabilidade ("+taxa.toFixed(1)+"% → "+((md.rent_pct||0)*100).toFixed(0)+"% × cobranças)"+(md.gate_fail?" ⛔ Bloqueado":"")+"</td>"
+    +"<td style='text-align:right;font-weight:600;color:"+(md.gate_fail?"#EF4444":"#059669")+"'>"+(md.gate_fail?"0,00 €":md.premio_rent.toFixed(2).replace(".",",")+" €")+"</td></tr>"
+    +"<tr class='grand'><td colspan='5'>🏆 PRÉMIO TOTAL ESTIMADO — Jan–"+monthLbl+" 2026</td>"
+    +"<td style='text-align:right'>"+md.total_premio.toFixed(2).replace(".",",")+" €</td></tr>"
+    +"</tfoot></table>"
+    +"<div class='footer-note'>Relatório emitido pela CB Seguros | Cascais &nbsp;·&nbsp; "+new Date().toLocaleDateString("pt-PT")
+    +"&nbsp;·&nbsp; Condição de Gate: oscilação positiva e produção activa em Automóvel, Saúde+AP, Vida Risco e Multirriscos</div>"
+    +"</div>"
+    // Charts script
+    +"<script>"
+    +"var RL="+JSON.stringify(ramoLabels)+",RC="+JSON.stringify(ramoCob26)+",RO="+JSON.stringify(ramoOsc)+",RCL="+JSON.stringify(ramoColors)+";"
+    +"var ML="+JSON.stringify(monthLabels)+",M25="+JSON.stringify(monthly25)+",M26="+JSON.stringify(monthly26)+";"
+    +"var taxa="+taxa.toFixed(2)+";"
+    +"var tickCfg={color:'#64748B',font:{size:9,family:'Barlow'}};"
+    +"var gridCfg={color:'rgba(0,0,0,.07)'};"
+    +"window.addEventListener('load',function(){"
+    +"new Chart(document.getElementById('ramoChart'),{type:'doughnut',data:{labels:RL,datasets:[{data:RC,backgroundColor:RCL,borderWidth:2,borderColor:'#fff'}]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{position:'right',labels:{color:'#475569',font:{size:9,family:'Barlow'},boxWidth:10,padding:5}},tooltip:{callbacks:{label:function(ctx){return ctx.label+': '+ctx.raw.toLocaleString('pt-PT',{minimumFractionDigits:0})+' €';}}}}}});"
+    +"var oscColors=RO.map(function(v){return v>=0?'rgba(5,150,105,.75)':'rgba(239,68,68,.75)';});"
+    +"new Chart(document.getElementById('oscChart'),{type:'bar',data:{labels:RL,datasets:[{label:'Oscilação',data:RO,backgroundColor:oscColors,borderRadius:4,borderSkipped:false}]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false},tooltip:{callbacks:{label:function(ctx){return (ctx.raw>=0?'+':'')+ctx.raw.toLocaleString('pt-PT',{minimumFractionDigits:0})+' €';}}}},scales:{x:{ticks:{color:'#64748B',font:{size:8},maxRotation:30},grid:{display:false},border:{display:false}},y:{ticks:{color:'#64748B',font:{size:8},callback:function(v){return v>=1000?(v/1000).toFixed(0)+'k€':v;}},grid:gridCfg,border:{display:false}}}}});"
+    +"new Chart(document.getElementById('monthlyChart'),{type:'bar',data:{labels:ML,datasets:[{label:'2025',data:M25,backgroundColor:'rgba(75,123,245,.7)',borderRadius:3,borderSkipped:false},{label:'2026',data:M26,backgroundColor:'rgba(5,150,105,.75)',borderRadius:3,borderSkipped:false}]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false},tooltip:{callbacks:{label:function(ctx){return ctx.dataset.label+': '+ctx.raw.toLocaleString('pt-PT',{minimumFractionDigits:0})+' €';}}}},scales:{x:{ticks:tickCfg,grid:{display:false},border:{display:false}},y:{ticks:{color:'#64748B',font:{size:8},callback:function(v){return v>=1000?(v/1000).toFixed(0)+'k€':v;}},grid:gridCfg,border:{display:false}}}}});"
+    +"var filled=Math.min(Math.max(taxa,0),100);"
+    +"new Chart(document.getElementById('rentChart'),{type:'doughnut',data:{datasets:[{data:[filled,100-filled],backgroundColor:[taxa>=65?'#059669':taxa>=45?'#D97706':'#EF4444','#F1F5F9'],borderWidth:0,circumference:180,rotation:-90}]},options:{responsive:true,maintainAspectRatio:false,cutout:'75%',plugins:{legend:{display:false},tooltip:{enabled:false}}},plugins:[{id:'ct',afterDraw:function(c){var ctx=c.ctx;ctx.save();ctx.textAlign='center';ctx.fillStyle=taxa>=65?'#059669':taxa>=45?'#D97706':'#EF4444';ctx.font='bold 20px Barlow Condensed';ctx.fillText(taxa.toFixed(1)+'%',c.width/2,c.height*0.68);ctx.restore();}}]});"
+    +"});<\/script></body></html>";
 
-<!-- KPIs -->
-<div class="kpi4">
-  <div class="kpi"><div class="kv">${md.total_cob26.toLocaleString("pt-PT",{minimumFractionDigits:0})} €</div><div class="kl">Cobranças Jan–${monthLbl} 2026</div></div>
-  <div class="kpi"><div class="kv" style="color:#475569">${md.total_cob25.toLocaleString("pt-PT",{minimumFractionDigits:0})} €</div><div class="kl">Cobranças Jan–${monthLbl} 2025</div></div>
-  <div class="kpi"><div class="kv" style="color:${md.total_osc>=0?'#059669':'#DC2626'}">${md.total_osc>=0?"+":""}${md.total_osc.toLocaleString("pt-PT",{minimumFractionDigits:0})} €</div><div class="kl">Oscilação YTD</div></div>
-  <div class="kpi"><div class="kv" style="color:${md.taxa_rent>=65?'#059669':md.taxa_rent>=45?'#D97706':'#DC2626'}">${md.taxa_rent.toFixed(1)}%</div><div class="kl">Taxa Rentabilidade</div></div>
-</div>
-
-<!-- CHARTS ROW 1 -->
-<div class="section-title">Análise Gráfica</div>
-<div class="charts-row">
-  <div class="chart-box">
-    <div class="chart-title">Cobranças por Grupo de Ramo — Jan–${monthLbl} 2026</div>
-    <div class="chart-wrap"><canvas id="ramoChart"></canvas></div>
-  </div>
-  <div class="chart-box">
-    <div class="chart-title">Oscilação por Grupo vs 2025</div>
-    <div class="chart-wrap"><canvas id="oscChart"></canvas></div>
-  </div>
-</div>
-
-<!-- MONTHLY CHART -->
-<div class="monthly-box">
-  <div class="chart-title">Evolução Mensal de Cobranças — 2025 vs 2026</div>
-  <div style="position:relative;height:180px"><canvas id="monthlyChart"></canvas></div>
-  <div style="display:flex;gap:14px;justify-content:center;margin-top:6px">
-    <span style="display:flex;align-items:center;gap:4px;font-size:10px;color:#475569"><span style="width:12px;height:4px;background:#4B7BF5;display:inline-block;border-radius:2px"></span>2025</span>
-    <span style="display:flex;align-items:center;gap:4px;font-size:10px;color:#475569"><span style="width:12px;height:4px;background:#059669;display:inline-block;border-radius:2px"></span>2026</span>
-  </div>
-</div>
-
-<!-- SIN + RENT -->
-<div class="sin-row">
-  <div class="sin-box">
-    <div class="chart-title">Sinistralidade (YTD ${monthLbl})</div>
-    <div class="big-num" style="color:#EF4444">${Math.abs(md.sin_total_ytd||0).toLocaleString("pt-PT",{minimumFractionDigits:0})} €</div>
-    <div style="font-size:10px;color:#94A3B8;margin-bottom:10px">${md.total_cob26>0?(Math.abs(md.sin_total_ytd||0)/md.total_cob26*100).toFixed(1):"0"}% das cobranças</div>
-    ${Object.entries(md.sin_ytd_by_ramo||{}).filter(([,v])=>v!==0).sort(([,a],[,b])=>a-b).map(([r,v])=>`
-    <div class="sint-bar">
-      <div class="sint-bar-lbl"><span>${r}</span><span style="color:#EF4444;font-weight:600">${Math.abs(v).toLocaleString("pt-PT",{minimumFractionDigits:0})} €</span></div>
-      <div class="sint-bar-bg"><div class="sint-bar-fill" style="width:${Math.min(Math.abs(v)/(Math.abs(md.sin_total_ytd)||1)*100,100).toFixed(1)}%"></div></div>
-    </div>`).join("")}
-    <table style="margin-top:10px;font-size:10px">
-      <tr><td style="color:#475569;padding:2px 0;border:none">Sinistros YTD</td><td style="text-align:right;color:#EF4444;padding:2px 0;border:none">${Math.abs(md.sin_total_ytd||0).toLocaleString("pt-PT",{minimumFractionDigits:0})} €</td></tr>
-      <tr><td style="color:#475569;padding:2px 0;border:none">Comissões YTD</td><td style="text-align:right;padding:2px 0;border:none">${(md.comissoes||0).toLocaleString("pt-PT",{minimumFractionDigits:0})} €</td></tr>
-      <tr><td style="color:#0B1326;font-weight:700;padding:2px 0;border:none">Margem Comercial</td><td style="text-align:right;font-weight:700;color:${(md.margem_val||0)>=0?'#059669':'#EF4444'};padding:2px 0;border:none">${(md.margem_val||0).toLocaleString("pt-PT",{minimumFractionDigits:0})} €</td></tr>
-    </table>
-  </div>
-  <div class="sin-box">
-    <div class="chart-title">Rentabilidade</div>
-    <div class="big-num" style="color:${md.taxa_rent>=65?'#059669':md.taxa_rent>=45?'#D97706':'#DC2626'}">${md.taxa_rent.toFixed(1)}%</div>
-    <div style="font-size:10px;color:#94A3B8;margin-bottom:8px">(Cob. − Sin. − Com.) ÷ Cob.</div>
-    <div class="escgrid">
-      ${[[0,25,0],[25,35,0.25],[35,45,0.75],[45,65,1],[65,null,2]].map(([lo,hi,pct])=>{
-        const act=md.taxa_rent>=lo&&(hi===null||md.taxa_rent<hi);
-        return `<div class="esbox ${act?"act":""}"><span class="esbox-v">${pct}%</span>${lo}${hi?"–"+hi:"+"}%</div>`;
-      }).join("")}
-    </div>
-    <div style="position:relative;height:110px;margin-top:8px"><canvas id="rentChart"></canvas></div>
-    <div style="margin-top:8px;font-size:11px;font-weight:700;color:${md.gate_fail?'#EF4444':'#059669'}">
-      Prémio Rentabilidade: ${md.gate_fail?"⛔ 0,00 €":md.premio_rent.toFixed(2).replace(".",",")+" €"}
-    </div>
-  </div>
-</div>
-
-<!-- TABLE -->
-<div class="section-title">Decomposição de Prémios por Grupo de Ramo</div>
-<table>
-  <thead><tr><th>Grupo de Ramo</th><th style="text-align:right">Cob. 2026</th><th style="text-align:right">Cob. 2025</th><th style="text-align:right">Oscilação</th><th style="text-align:center">Escalão</th><th style="text-align:right">Prémio</th></tr></thead>
-  <tbody>${rows}</tbody>
-  <tfoot>
-    <tr class="tot"><td>Total Crescimento</td><td style="text-align:right">${T26.toLocaleString("pt-PT",{minimumFractionDigits:2})} €</td><td style="text-align:right">${T25.toLocaleString("pt-PT",{minimumFractionDigits:2})} €</td><td style="text-align:right;color:${(T26-T25)>=0?'#059669':'#DC2626'}">${(T26-T25)>=0?"+":""}${(T26-T25).toLocaleString("pt-PT",{minimumFractionDigits:2})} €</td><td>—</td><td style="text-align:right">${TP.toFixed(2).replace(".",",")} €</td></tr>
-    <tr class="rent-row"><td colspan="5">+ Prémio Rentabilidade (${md.taxa_rent.toFixed(1)}% → ${md.rent_escalao||"—"} → ${((md.rent_pct||0)*100).toFixed(0)}% × cobranças)${md.gate_fail?" &nbsp;⛔ Bloqueado":""}</td><td style="text-align:right;font-weight:600;color:${md.gate_fail?"#EF4444":"#059669"}">${md.gate_fail?"0,00 €":md.premio_rent.toFixed(2).replace(".",",")+" €"}</td></tr>
-    <tr class="grand"><td colspan="5">🏆 PRÉMIO TOTAL ESTIMADO — Jan–${monthLbl} 2026</td><td style="text-align:right">${md.total_premio.toFixed(2).replace(".",",")} €</td></tr>
-  </tfoot>
-</table>
-
-<div class="footer-note">
-  Relatório emitido pela CB Seguros | Cascais &nbsp;·&nbsp; ${new Date().toLocaleDateString("pt-PT")} &nbsp;·&nbsp;
-  Dados provisórios sujeitos a validação final &nbsp;·&nbsp; Comparativo: mesmos períodos de 2025 &nbsp;·&nbsp;
-  Condição de Gate: oscilação positiva e produção activa em Automóvel, Saúde+AP, Vida Risco e Multirriscos
-</div>
-
-</div><!-- /page -->
-
-<script>
-// Draw charts after window loads
-window.addEventListener("load", function() {
-  const tickCfg = { color:"#64748B", font:{size:9,family:"Barlow"} };
-  const gridCfg = { color:"rgba(0,0,0,.07)" };
-
-  // 1. Cobranças por ramo (donut)
-  new Chart(document.getElementById("ramoChart"), {
-    type:"doughnut",
-    data:{
-      labels:${JSON.stringify(ramoLabels)},
-      datasets:[{data:${JSON.stringify(ramoCob26)},backgroundColor:${JSON.stringify(ramoColors)},borderWidth:2,borderColor:"#fff"}]
-    },
-    options:{responsive:true,maintainAspectRatio:false,plugins:{
-      legend:{position:"right",labels:{color:"#475569",font:{size:9,family:"Barlow"},boxWidth:10,padding:5}},
-      tooltip:{callbacks:{label:ctx=>`${ctx.label}: ${ctx.raw.toLocaleString("pt-PT",{minimumFractionDigits:0})} €`}}
-    }}
-  });
-
-  // 2. Oscilação por ramo (bar)
-  const oscColors = ${JSON.stringify(ramoOsc)}.map(v=>v>=0?"rgba(5,150,105,.75)":"rgba(239,68,68,.75)");
-  new Chart(document.getElementById("oscChart"), {
-    type:"bar",
-    data:{
-      labels:${JSON.stringify(ramoLabels)},
-      datasets:[{
-        label:"Oscilação",
-        data:${JSON.stringify(ramoOsc)},
-        backgroundColor:oscColors,
-        borderRadius:4, borderSkipped:false
-      }]
-    },
-    options:{responsive:true,maintainAspectRatio:false,
-      plugins:{legend:{display:false},tooltip:{callbacks:{label:ctx=>`${ctx.raw>=0?"+":""}${ctx.raw.toLocaleString("pt-PT",{minimumFractionDigits:0})} €`}}},
-      scales:{
-        x:{ticks:{...tickCfg,maxRotation:30},grid:{display:false},border:{display:false}},
-        y:{ticks:{...tickCfg,callback:v=>v>=1000?(v/1000).toFixed(0)+"k€":v},grid:gridCfg,border:{display:false}}
-      }
-    }
-  });
-
-  // 3. Mensal (bar grouped)
-  new Chart(document.getElementById("monthlyChart"), {
-    type:"bar",
-    data:{
-      labels:${JSON.stringify(Array.from({length:CUR_MONTH},(_,i)=>MONTHS[i]))},
-      datasets:[
-        {label:"2025",data:${JSON.stringify(Array.from({length:CUR_MONTH},(_,i)=>p.monthly_cob25[i]||0))},backgroundColor:"rgba(75,123,245,.7)",borderRadius:3,borderSkipped:false},
-        {label:"2026",data:${JSON.stringify(Array.from({length:CUR_MONTH},(_,i)=>p.monthly_cob26[i]||0))},backgroundColor:"rgba(5,150,105,.75)",borderRadius:3,borderSkipped:false}
-      ]
-    },
-    options:{responsive:true,maintainAspectRatio:false,
-      plugins:{legend:{display:false},tooltip:{callbacks:{label:ctx=>`${ctx.dataset.label}: ${ctx.raw.toLocaleString("pt-PT",{minimumFractionDigits:0})} €`}}},
-      scales:{
-        x:{ticks:tickCfg,grid:{display:false},border:{display:false}},
-        y:{ticks:{...tickCfg,callback:v=>v>=1000?(v/1000).toFixed(0)+"k€":v},grid:gridCfg,border:{display:false}}
-      }
-    }
-  });
-
-  // 4. Rentabilidade gauge (doughnut half)
-  const taxa=${md.taxa_rent};
-  const maxTaxa=100;
-  const filled=Math.min(Math.max(taxa,0),maxTaxa);
-  new Chart(document.getElementById("rentChart"),{
-    type:"doughnut",
-    data:{
-      datasets:[{
-        data:[filled, maxTaxa-filled],
-        backgroundColor:[taxa>=65?"#059669":taxa>=45?"#D97706":"#EF4444","#F1F5F9"],
-        borderWidth:0,circumference:180,rotation:-90
-      }]
-    },
-    options:{responsive:true,maintainAspectRatio:false,cutout:"75%",
-      plugins:{legend:{display:false},tooltip:{enabled:false}},
-    },
-    plugins:[{
-      id:"center",
-      afterDraw:function(chart){
-        const ctx=chart.ctx,{width,height}=chart.chartArea||chart;
-        ctx.save();
-        ctx.textAlign="center";
-        ctx.textBaseline="middle";
-        ctx.fillStyle=taxa>=65?"#059669":taxa>=45?"#D97706":"#EF4444";
-        ctx.font="bold 20px 'Barlow Condensed'";
-        ctx.fillText(taxa.toFixed(1)+"%", chart.width/2, chart.height*0.68);
-        ctx.restore();
-      }
-    }]
-  });
-});
-<\/script>
-</body></html>`);
+  win.document.write(html);
   win.document.close();
 }
 
@@ -1563,7 +1449,11 @@ function renderMapa() {
       }
       if (vals.every(v => v===0)) continue;
       hasAny = true;
-      const cells2 = vals.map(v => `<td style="color:${v<0?'var(--rd2)':'var(--tx3)'};font-size:11px">${v!==0?Math.abs(v).toLocaleString("pt-PT",{minimumFractionDigits:0})+" €":"—"}</td>`).join("");
+      const cells2 = vals.map(function(v){
+        const vcolor = v<0?'var(--rd2)':'var(--tx3)';
+        const vtext = v!==0?Math.abs(v).toLocaleString("pt-PT",{minimumFractionDigits:0})+" €":"—";
+        return "<td style='color:"+vcolor+";text-align:right;font-size:11px'>"+vtext+"</td>";
+      }).join("");
       ramoRows += `<tr><td class="pn" style="font-size:11px">${p.name}</td>${cells2}<td style="color:var(--rd2);font-weight:600;font-size:11px">${rowTotal!==0?Math.abs(rowTotal).toLocaleString("pt-PT",{minimumFractionDigits:0})+" €":"—"}</td></tr>`;
     }
     if (!hasAny) continue;
