@@ -24,7 +24,7 @@ html,body{background:var(--bg);font-family:'Barlow',sans-serif;color:var(--tx);m
 #app{position:relative;z-index:1;max-width:1200px;margin:0 auto;padding:16px 16px 40px}
 
 /* ── LOGIN ── */
-#login-screen{display:flex;flex-direction:column;align-items:center;justify-content:center;min-height:80vh}
+#login-screen{display:none;flex-direction:column;align-items:center;justify-content:center;min-height:80vh}
 .lcard{background:var(--bg2);border:.5px solid var(--br);border-radius:20px;padding:40px 44px;max-width:420px;width:100%;text-align:center;box-shadow:0 4px 24px rgba(0,0,0,.08)}
 .ltitle{font-size:22px;font-weight:700;color:var(--wh);margin-bottom:6px}
 .lsub{font-size:13px;color:var(--tx2);margin-bottom:26px;line-height:1.6}
@@ -242,13 +242,13 @@ code{background:rgba(75,123,245,.18);color:var(--ac2);padding:1px 5px;border-rad
     </div>
     <div class="ltitle">Incentivos Rede 2026</div>
     <div class="lsub">Acede com a conta Microsoft para carregar os dados do SharePoint automaticamente.</div>
-    <button class="btn-ms" onclick="signIn()">
+    <button class="btn-ms" onclick="doLogin()">
       <svg width="20" height="20" viewBox="0 0 21 21"><rect x="1" y="1" width="9" height="9" fill="#f25022"/><rect x="11" y="1" width="9" height="9" fill="#7fba00"/><rect x="1" y="11" width="9" height="9" fill="#00a4ef"/><rect x="11" y="11" width="9" height="9" fill="#ffb900"/></svg>
       Entrar com Microsoft 365
     </button>
     <div class="lnote">Conta <strong>@cbseguros.net</strong></div>
     <div class="lnkrow">
-      <button class="lnk" onclick="showSetup()">⚙️ Configurar Azure AD</button>
+      <button class="lnk" onclick="doLogin()">⚙️ Configurar Azure AD</button>
       <button class="lnk" onclick="useDemoMode()">📊 Modo Demo</button>
     </div>
   </div>
@@ -431,22 +431,51 @@ function showLoading(){showL("A carregar dados do SharePoint...");}
 function showApp(){var ls=document.getElementById("loading-screen"),ma=document.getElementById("main-app");if(ls)ls.style.display="none";if(ma)ma.style.display="block";}
 function setP(p,m){var bar=document.getElementById("lbar");if(bar)bar.style.width=p+"%";var msg=document.getElementById("lmsg");if(msg)msg.textContent=m;}
 function useDemoMode(){PARTNERS=DEMO_PARTNERS;SORTED_CODES=DEMO_SORTED;var sl=document.getElementById("last-sync");if(sl)sl.textContent="Dados locais";renderApp();showApp();}
+
+function doLogin(){
+  showL("A iniciar sessão...");
+  initMsalApp().then(function(app){
+    var inFrame=(window.self!==window.top);
+    if(inFrame){
+      return app.loginPopup({scopes:AUTH_SCOPES,prompt:"select_account"}).then(function(r){
+        app.setActiveAccount(r.account);setUser(r.account);_token=r.accessToken;
+        var li=document.getElementById("login-screen");if(li)li.style.display="none";
+        return loadSP();
+      });
+    }else{
+      return app.loginRedirect({scopes:AUTH_SCOPES});
+    }
+  }).catch(function(e){
+    console.error("Login:",e);
+    showL("Erro: "+(e.message||e));
+    setTimeout(function(){
+      var ls=document.getElementById("loading-screen");if(ls)ls.style.display="none";
+      var li=document.getElementById("login-screen");if(li)li.style.display="flex";
+    },2000);
+  });
+}
+
 window.addEventListener("load",function(){
-  showL("A inicializar autenticação Microsoft...");
+  showL("A verificar sessão Microsoft...");
   setTimeout(function(){
     initMsalApp().then(function(app){
-      var inFrame=(window.self!==window.top);
       return app.handleRedirectPromise().catch(function(){}).then(function(resp){
-        if(resp&&resp.account){app.setActiveAccount(resp.account);setUser(resp.account);_token=resp.accessToken;return loadSP();}
+        if(resp&&resp.account){
+          app.setActiveAccount(resp.account);setUser(resp.account);_token=resp.accessToken;return loadSP();
+        }
         var accs=app.getAllAccounts();
         if(accs.length>0){app.setActiveAccount(accs[0]);setUser(accs[0]);return loadSP();}
-        showL("A iniciar sessão Microsoft 365...");
-        if(inFrame){return app.loginPopup({scopes:AUTH_SCOPES,prompt:"select_account"}).then(function(r){app.setActiveAccount(r.account);setUser(r.account);_token=r.accessToken;return loadSP();});}
-        else{return app.loginRedirect({scopes:AUTH_SCOPES});}
+        // Sem sessão — mostrar ecrã de login
+        var ls=document.getElementById("loading-screen");if(ls)ls.style.display="none";
+        var li=document.getElementById("login-screen");if(li)li.style.display="flex";
       });
-    }).catch(function(e){console.error("Auth:",e);showL("Erro: "+(e.message||e));setTimeout(function(){useDemoMode();},3000);});
+    }).catch(function(e){
+      console.error("Auth init:",e);
+      var ls=document.getElementById("loading-screen");if(ls)ls.style.display="none";
+      var li=document.getElementById("login-screen");if(li)li.style.display="flex";
+    });
   },600);
-});
+}););
 
 
 // ═══════════════════════════════════════════════════════════
