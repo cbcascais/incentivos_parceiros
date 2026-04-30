@@ -24,7 +24,7 @@ html,body{background:var(--bg);font-family:'Barlow',sans-serif;color:var(--tx);m
 #app{position:relative;z-index:1;max-width:1200px;margin:0 auto;padding:16px 16px 40px}
 
 /* ── LOGIN ── */
-#login-screen{display:none;flex-direction:column;align-items:center;justify-content:center;min-height:80vh}
+#login-screen{display:flex;flex-direction:column;align-items:center;justify-content:center;min-height:80vh}
 .lcard{background:var(--bg2);border:.5px solid var(--br);border-radius:20px;padding:40px 44px;max-width:420px;width:100%;text-align:center;box-shadow:0 4px 24px rgba(0,0,0,.08)}
 .ltitle{font-size:22px;font-weight:700;color:var(--wh);margin-bottom:6px}
 .lsub{font-size:13px;color:var(--tx2);margin-bottom:26px;line-height:1.6}
@@ -53,7 +53,7 @@ code{background:rgba(75,123,245,.18);color:var(--ac2);padding:1px 5px;border-rad
 .btn-s{background:var(--bg3);color:var(--tx2);border:.5px solid var(--br);border-radius:8px;padding:9px 20px;font-family:'Barlow',sans-serif;font-size:12px;cursor:pointer}
 
 /* ── LOADING ── */
-#loading-screen{display:flex;flex-direction:column;align-items:center;justify-content:center;min-height:60vh;gap:14px}
+#loading-screen{display:none;flex-direction:column;align-items:center;justify-content:center;min-height:60vh;gap:14px}
 .spinner{width:44px;height:44px;border:3px solid var(--br);border-top-color:var(--ac);border-radius:50%;animation:spin 1s linear infinite}
 @keyframes spin{to{transform:rotate(360deg)}}
 .lmsg{font-size:12px;color:var(--tx2)}
@@ -381,7 +381,7 @@ code{background:rgba(75,123,245,.18);color:var(--ac2);padding:1px 5px;border-rad
 // DATA
 // ═══════════════════════════════════════════════════════════
 const DEMO_PARTNERS = {"0018074":{"code":"0018074","name":"JOAQUIM TEIXEIRA","months":{"1":{"month":1,"month_name":"Janeiro","total_cob26":21155.57,"total_cob25":21744.85,"total_osc":-589.28,"total_premio":0.0,"gate_fail":true,"gate_ramos_neg":["Vida Risco","Saúde + AP","Automóvel"],"sin_total_ytd":-80917.73,"sin_total_month":-26972.58,"sin_ytd_by_ramo":{"Automóvel":-77189.17,"Saúde + AP":-1128.56,"Acidentes de Trabalho":-2600.0},"sin_month_by_ramo":{"Automóvel":-25729.72,"Saúde + AP":-376.19,"Acidentes de Trabalho":-866.67},"comissoes":1234.52,"margem_val":-60996.68,"taxa_rent":-288.32,"rent_escalao":"≥0%","rent_pct":0,"premio_rent":0.0,"ramos":{"Vida Risco":{"label":"Vida Risco","cob26":0.0,"cob25":0.0,"osc":0.0,"escalao":"Negativo","pctOsc":0,"pctCart":0,"gate_ramo":true,"gate_absent":true,"premioCresc":0.0,"premioCart":0.0,"premio":0.0},"Vida Financeiros":{"label":"Vida Financeiros","cob26":0.0,"cob25":0.0,"osc":0.0,"escalao":"Negativo","pctOsc":0,"pctCart":0,"gate_ramo":false,"gate_absent":false,"premioCresc":0.0,"premioCart":0.0,"premio":0.0},"Saúde + AP":{"label":"Saúde + AP","cob26":0.0,"cob25":0.0,"osc":0.0,"escalao":"Negativo","pctOsc":0,"pctCart":0,"gate_ramo":true,"gate_absent":true,"premioCresc":0.0,"premioCart":0.0,"premio":0.0},"Multirriscos":{"label":"Multirriscos","cob26":234.49,"cob25":229.89,"osc":4.6,"escalao":"≥ 0","pctOsc":0,"pctCart":0,"gate_ramo":true,"gate_absent":false,"premioCresc":0.0,"premioCart":0.0,"premio":0.0},"Automóvel":{"label":"Automóvel","cob26":2974.76,"cob25":3358.95,"osc":-384.19,"escalao":"Negativo","pctOsc":0,"pctCart":0,"gate_ramo":true,"gate_absent":false,"premioCresc":0.0,"premioCart":0.0,"premio":0.0},"Acidentes de Trabalho":{"label":"Acidentes Trabalho","cob26":4413.45,"cob25":7970.84,"osc":-3557.39,"escalao":"Negativo","pctOsc":0,"pctCart":0,"gate_ramo":false,"gate_absent":false,"premioCresc":0.0,"premioCart":0.0,"premio":0.0},"Outros":{"label":"Outros","cob26":13532.87,"cob25":10185.17,"osc":3347.7,"escalao":"≥ 2.500","pctOsc":0.015,"pctCart":0.005,"gate_ramo":false,"gate_absent":false,"premioCresc":0.0,"premioCart":0.0,"premio":0.0}}},"2":{"month":2,"month_name":"Fevereiro","to// ═══════════════════════════════════════════════════════════
-// AUTENTICAÇÃO — copiado da CB Seguros Dashboard Sinistralidade
+// AUTH M365 — CB Seguros Incentivos Parceiros 2026
 // ═══════════════════════════════════════════════════════════
 var msalApp = null;
 var _token  = null;
@@ -390,9 +390,9 @@ var CLIENT  = "6e166a10-9f36-4888-9a23-1734f238d2d0";
 var REDIRECT= "https://cbcascais.github.io/incentivos_parceiros/";
 var SCOPES  = ["User.Read","Files.Read.All","Sites.Read.All"];
 
-function isInFrame() { try { return window.self !== window.top; } catch(e) { return true; } }
-function isMobileDevice() { return /Android|iPhone|iPad|iPod|Mobile/i.test(navigator.userAgent); }
-function useRedirect() { return isInFrame() || isMobileDevice(); }
+function isInFrame(){ try{ return window.self!==window.top; }catch(e){ return true; } }
+function isMobileDevice(){ return /Android|iPhone|iPad|iPod|Mobile/i.test(navigator.userAgent); }
+function useRedirect(){ return isInFrame()||isMobileDevice(); }
 
 function loadMsalLib() {
   return new Promise(function(res, rej) {
@@ -437,86 +437,103 @@ function getToken() {
   });
 }
 
-function setUser(acc) {
-  var el = document.getElementById("user-lbl");
-  if (el) el.textContent = "👤 " + acc.name;
+// ── UI helpers ──
+function showLogin(){
+  document.getElementById("loading-screen").style.display="none";
+  document.getElementById("main-app").style.display="none";
+  document.getElementById("login-screen").style.display="flex";
 }
-function showL(m) {
-  var ls = document.getElementById("loading-screen");
-  var ma = document.getElementById("main-app");
-  var li = document.getElementById("login-screen");
-  if (ls) ls.style.display = "flex";
-  if (ma) ma.style.display = "none";
-  if (li) li.style.display = "none";
-  var lm = document.getElementById("lmsg");
-  if (lm) lm.textContent = m || "A carregar...";
+function showLoading(m){
+  document.getElementById("login-screen").style.display="none";
+  document.getElementById("main-app").style.display="none";
+  document.getElementById("loading-screen").style.display="flex";
+  var lm=document.getElementById("lmsg"); if(lm) lm.textContent=m||"A carregar...";
 }
-function hideL() {
-  var ls = document.getElementById("loading-screen");
-  if (ls) ls.style.display = "none";
+function showApp(){
+  document.getElementById("login-screen").style.display="none";
+  document.getElementById("loading-screen").style.display="none";
+  document.getElementById("main-app").style.display="block";
 }
-function showLoading() { showL("A carregar dados do SharePoint..."); }
-function showApp() {
-  hideL();
-  var ma = document.getElementById("main-app");
-  if (ma) ma.style.display = "block";
+function showL(m){ showLoading(m); }
+function hideL(){ /* handled by showApp/showLogin */ }
+function setP(p,m){
+  var bar=document.getElementById("lbar"); if(bar) bar.style.width=p+"%";
+  var msg=document.getElementById("lmsg"); if(msg) msg.textContent=m;
 }
-function setP(p, m) {
-  var bar = document.getElementById("lbar");
-  if (bar) bar.style.width = p + "%";
-  var msg = document.getElementById("lmsg");
-  if (msg) msg.textContent = m;
+function setUser(acc){
+  var el=document.getElementById("user-lbl"); if(el) el.textContent="👤 "+acc.name;
 }
-function doLogin() {
-  showL("A autenticar...");
-  initMsalApp().then(function(app) {
-    if (useRedirect()) {
-      return app.loginRedirect({ scopes:SCOPES });
-    } else {
-      return app.loginPopup({ scopes:SCOPES, prompt:"select_account" }).then(function(r) {
-        app.setActiveAccount(r.account);
-        setUser(r.account);
-        _token = r.accessToken;
-        hideL();
-        return loadSP();
-      });
-    }
-  }).catch(function(e) {
-    hideL();
-    var li = document.getElementById("login-screen");
-    if (li) li.style.display = "flex";
-    console.error("Login:", e);
-  });
-}
-function useDemoMode() {
+function useDemoMode(){
   PARTNERS=DEMO_PARTNERS; SORTED_CODES=DEMO_SORTED;
   var sl=document.getElementById("last-sync"); if(sl) sl.textContent="Dados locais";
-  var src=document.getElementById("src-lbl"); if(src) src.textContent="ficheiros locais";
   renderApp(); showApp();
 }
 
+// ── doLogin — chamado pelo botão ──
+function doLogin(){
+  showLoading("A autenticar com Microsoft 365...");
+  initMsalApp().then(function(app){
+    if(useRedirect()){
+      // Mobile/iframe: redirect
+      app.loginRedirect({scopes:SCOPES}).catch(function(e){
+        console.error("Redirect login:",e);
+        showLogin();
+      });
+    } else {
+      // Desktop: popup (mais fiável quando iniciado por click)
+      app.loginPopup({scopes:SCOPES,prompt:"select_account"}).then(function(r){
+        app.setActiveAccount(r.account);
+        setUser(r.account);
+        _token=r.accessToken;
+        return loadSP();
+      }).catch(function(e){
+        console.error("Popup login:",e);
+        // Popup bloqueado? tentar redirect
+        app.loginRedirect({scopes:SCOPES}).catch(function(e2){
+          console.error("Redirect fallback:",e2);
+          showLogin();
+        });
+      });
+    }
+  }).catch(function(e){
+    console.error("MSAL init:",e);
+    showLogin();
+  });
+}
+
+// ── Verificar sessão ao carregar ──
 window.addEventListener("load",function(){
+  // Mostrar ecrã de login por defeito — mais fiável
+  showLogin();
+
+  // Em background: verificar se já há sessão activa
   setTimeout(function(){
     initMsalApp().then(function(app){
+      // Processar redirect de volta (se veio do loginRedirect)
       return app.handleRedirectPromise().catch(function(){}).then(function(resp){
         if(resp&&resp.account){
           app.setActiveAccount(resp.account);
           setUser(resp.account);
           _token=resp.accessToken;
+          showLoading("A carregar dados...");
           return loadSP();
         }
-        var accounts=app.getAllAccounts();
-        if(accounts.length>0){
-          app.setActiveAccount(accounts[0]);
-          setUser(accounts[0]);
+        // Verificar sessão em cache
+        var accs=app.getAllAccounts();
+        if(accs.length>0){
+          app.setActiveAccount(accs[0]);
+          setUser(accs[0]);
+          showLoading("A retomar sessão...");
           return loadSP();
         }
-        // Nenhuma sessão ativa — redireciona automaticamente para login M365
-        showL("A redirecionar para login...");
-        return app.loginRedirect({ scopes:SCOPES });
+        // Sem sessão — manter ecrã de login visível
+        showLogin();
       });
-    }).catch(function(e){console.error("Auto-login:",e);});
-  },800);
+    }).catch(function(e){
+      console.error("Session check:",e);
+      showLogin();
+    });
+  },500);
 });
 
 
@@ -595,7 +612,7 @@ function ss(id){["setup-screen","login-screen","loading-screen","main-app"].forE
 
 
 // ── AUTH ────────────────────────────────────────────────────
-
+function initMsal(t,c){msalInst=new msal.PublicClientApplication({auth:{clientId:c,authority:`https://login.microsoftonline.com/${t}`,redirectUri:location.href.split("?")[0]},cache:{cacheLocation:"localStorage",storeAuthStateInCookie:true}});}
 function loadCfg(){const t=localStorage.getItem("cb_t"),c=localStorage.getItem("cb_c");return{t,c,ok:!!(t&&c)};}
 
 
