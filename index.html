@@ -4,6 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width,initial-scale=1.0">
 <title>CB Seguros | Incentivos Rede 2026</title>
+<script src="https://cdn.jsdelivr.net/npm/@azure/msal-browser@2.38.3/lib/msal-browser.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.js"></script>
 <style>
@@ -387,10 +388,11 @@ function isInFrame(){return window.self!==window.top;}
 function isMobileDevice(){return /Mobi|Android/i.test(navigator.userAgent);}
 function loadMsalLib() {
   return new Promise(function(res, rej) {
-    if (window.msal) { res(); return; }
+    if (window.msal) { res(); return; } // Already loaded via static script tag
     var urls = [
       "https://cdn.jsdelivr.net/npm/@azure/msal-browser@2.38.3/lib/msal-browser.min.js",
-      "https://cdnjs.cloudflare.com/ajax/libs/microsoft-authentication-library/2.38.3/msal-browser.min.js"
+      "https://cdnjs.cloudflare.com/ajax/libs/microsoft-authentication-library/2.38.3/msal-browser.min.js",
+      "https://unpkg.com/@azure/msal-browser@2.38.3/lib/msal-browser.min.js"
     ];
     var idx = 0;
     function next() {
@@ -457,8 +459,16 @@ function doLogin(){
 
 window.addEventListener("load",function(){
   showL("A verificar sessão Microsoft...");
+
+  // Timeout de segurança — se MSAL não carregar em 6s, mostra ecrã de login
+  var safetyTimer = setTimeout(function(){
+    console.warn("MSAL timeout — a mostrar ecrã de login");
+    var ls=document.getElementById("loading-screen"); if(ls)ls.style.display="none";
+    var li=document.getElementById("login-screen"); if(li)li.style.display="flex";
+  }, 6000);
   setTimeout(function(){
     initMsalApp().then(function(app){
+      clearTimeout(safetyTimer);
       return app.handleRedirectPromise().catch(function(){}).then(function(resp){
         if(resp&&resp.account){
           app.setActiveAccount(resp.account);setUser(resp.account);_token=resp.accessToken;return loadSP();
@@ -470,6 +480,7 @@ window.addEventListener("load",function(){
         var li=document.getElementById("login-screen");if(li)li.style.display="flex";
       });
     }).catch(function(e){
+      clearTimeout(safetyTimer);
       console.error("Auth init:",e);
       var ls=document.getElementById("loading-screen");if(ls)ls.style.display="none";
       var li=document.getElementById("login-screen");if(li)li.style.display="flex";
