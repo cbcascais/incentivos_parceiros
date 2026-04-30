@@ -53,7 +53,7 @@ code{background:rgba(75,123,245,.18);color:var(--ac2);padding:1px 5px;border-rad
 .btn-s{background:var(--bg3);color:var(--tx2);border:.5px solid var(--br);border-radius:8px;padding:9px 20px;font-family:'Barlow',sans-serif;font-size:12px;cursor:pointer}
 
 /* ── LOADING ── */
-#loading-screen{display:none;flex-direction:column;align-items:center;justify-content:center;min-height:60vh;gap:14px}
+#loading-screen{display:flex;flex-direction:column;align-items:center;justify-content:center;min-height:60vh;gap:14px}
 .spinner{width:44px;height:44px;border:3px solid var(--br);border-top-color:var(--ac);border-radius:50%;animation:spin 1s linear infinite}
 @keyframes spin{to{transform:rotate(360deg)}}
 .lmsg{font-size:12px;color:var(--tx2)}
@@ -467,8 +467,18 @@ function detectMonthFromFilename(name) {
 }
 
 // ── SCREENS ──
-function showLoading(){document.getElementById("loading-screen").style.display="flex";document.getElementById("main-app").style.display="none";}
-function showApp(){document.getElementById("loading-screen").style.display="none";document.getElementById("main-app").style.display="block";}
+function showLoading(){
+  var ls=document.getElementById("loading-screen");
+  var ma=document.getElementById("main-app");
+  if(ls) ls.style.display="flex";
+  if(ma) ma.style.display="none";
+}
+function showApp(){
+  var ls=document.getElementById("loading-screen");
+  var ma=document.getElementById("main-app");
+  if(ls) ls.style.display="none";
+  if(ma) ma.style.display="block";
+}
 function setP(p,m){document.getElementById("lbar").style.width=p+"%";document.getElementById("lmsg").textContent=m;}
 
 // ── GRAPH API ──
@@ -540,8 +550,8 @@ async function syncData(){if(!_token){alert("Não autenticado.");return;}await l
 
 function useDemoMode(){
   PARTNERS=DEMO_PARTNERS; SORTED_CODES=DEMO_SORTED;
-  document.getElementById("last-sync").textContent="Dados locais";
-  document.getElementById("src-lbl").textContent="ficheiros locais (sem ligação SharePoint)";
+  var ls=document.getElementById("last-sync"); if(ls) ls.textContent="Dados locais";
+  var sl=document.getElementById("src-lbl"); if(sl) sl.textContent="ficheiros locais";
   renderApp(); showApp();
 }
 
@@ -1267,6 +1277,12 @@ checkAuth();
 
 // ── INIT — auto-login M365 como na Sinistralidade ─────────────
 window.addEventListener("load", function() {
+  // Mostrar loading imediatamente — nunca fica em branco
+  document.getElementById("loading-screen").style.display = "flex";
+  document.getElementById("main-app").style.display = "none";
+  document.getElementById("lmsg").textContent = "A inicializar autenticação Microsoft...";
+  document.getElementById("lbar").style.width = "10%";
+
   initMsalApp().then(function(app) {
     return app.handleRedirectPromise().catch(function(){}).then(function(resp) {
       if (resp && resp.account) {
@@ -1281,15 +1297,15 @@ window.addEventListener("load", function() {
         setUser(accounts[0]);
         return loadSP();
       }
-      // Sem sessão activa — redirecionar automaticamente para login M365
-      showLoading();
-      setP(0, "A redirecionar para login Microsoft...");
+      // Sem sessão activa — redirecionar para login M365
+      document.getElementById("lmsg").textContent = "A redirecionar para login Microsoft 365...";
+      document.getElementById("lbar").style.width = "30%";
       return app.loginRedirect({ scopes: SCOPES });
     });
   }).catch(function(e) {
     console.error("Auth error:", e);
-    // Fallback para dados locais se auth falhar
-    useDemoMode();
+    document.getElementById("lmsg").textContent = "Erro: " + (e.message||"autenticação falhou") + ". A carregar dados locais...";
+    setTimeout(function(){ useDemoMode(); }, 2000);
   });
 });
 
