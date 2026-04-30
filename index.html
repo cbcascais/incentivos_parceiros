@@ -470,17 +470,24 @@ function setP(p,m){var b=document.getElementById("lbar");if(b)b.style.width=p+"%
 function doLogin(){
   showLoading("A autenticar com Microsoft 365...");
   initMsalApp().then(function(app){
-    if(useRedirect()){
-      app.loginRedirect({scopes:SCOPES}).catch(function(e){console.error("Redirect:",e);showLogin();});
-    }else{
+    // Se estamos num iframe, DEVE usar popup (redirect bloqueado pelo MSAL)
+    // Se top frame, usar redirect (melhor UX no browser)
+    if(isInFrame()){
+      // iframe: popup obrigatório
       app.loginPopup({scopes:SCOPES,prompt:"select_account"}).then(function(r){
         app.setActiveAccount(r.account);setUser(r.account);_token=r.accessToken;return loadSP();
-      }).catch(function(e){
-        console.warn("Popup failed, trying redirect:",e);
-        app.loginRedirect({scopes:SCOPES}).catch(function(e2){console.error("Redirect:",e2);showLogin();});
+      }).catch(function(e){console.error("Popup:",e);showLogin();});
+    }else{
+      // top frame: redirect (melhor experiência)
+      app.loginRedirect({scopes:SCOPES}).catch(function(e){
+        // Se redirect falhar, tentar popup como fallback
+        console.warn("Redirect failed, trying popup:",e);
+        app.loginPopup({scopes:SCOPES,prompt:"select_account"}).then(function(r){
+          app.setActiveAccount(r.account);setUser(r.account);_token=r.accessToken;return loadSP();
+        }).catch(function(e2){console.error("Popup fallback:",e2);showLogin();});
       });
     }
-  }).catch(function(e){console.error("MSAL:",e);showLogin();});
+  }).catch(function(e){console.error("MSAL init:",e);showLogin();});
 }
 function useDemoMode(){
   PARTNERS=DEMO_PARTNERS;SORTED_CODES=DEMO_SORTED;
