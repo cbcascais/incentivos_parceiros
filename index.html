@@ -1420,11 +1420,11 @@ function renderMapa() {
     colTotals[CUR_MONTH] += rowTotal;
     // YTD col
     const md = getMD(code);
-    const ytdVal = md.sin_total_ytd_ytd || 0;
+    const ytdVal = md.sin_total_ytd || 0;
     cells += `<td style="color:var(--rd2);font-weight:600">${ytdVal!==0?Math.abs(ytdVal).toLocaleString("pt-PT",{minimumFractionDigits:0})+" €":"—"}</td>`;
 
     const hasData = rowTotal !== 0 || ytdVal !== 0;
-    if (!hasData) return;
+    if (!hasData) continue; // skip this partner, don't exit renderMapa
     summaryRows += `<tr onclick="goToParceiro('${code}')" style="cursor:pointer">
       <td class="pn">${p.name}</td>
       ${cells}
