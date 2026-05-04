@@ -28,7 +28,7 @@ html,body{background:var(--bg);font-family:'Barlow',sans-serif;color:var(--tx);m
 .lcard{background:var(--bg2);border:.5px solid var(--br);border-radius:20px;padding:40px 44px;max-width:420px;width:100%;text-align:center;box-shadow:0 4px 24px rgba(0,0,0,.08)}
 .ltitle{font-size:22px;font-weight:700;color:var(--wh);margin-bottom:6px}
 .lsub{font-size:13px;color:var(--tx2);margin-bottom:26px;line-height:1.6}
-.btn-ms{display:flex;align-items:center;justify-content:center;gap:10px;background:var(--ac);color:#fff;border:none;border-radius:10px;padding:13px 24px;font-family:'Barlow',sans-serif;font-size:14px;font-weight:600;cursor:pointer;width:100%;transition:.2s}
+.btn-ms{display:flex;align-items:center;justify-content:center;gap:10px;background:var(--ac);color:#fff;border:none;border-radius:10px;padding:13px 24px;font-family:'Barlow',sans-serif;font-size:14px;font-weight:600;cursor:pointer;width:100%;transition:.2s;touch-action:manipulation;-webkit-tap-highlight-color:transparent}
 .btn-ms:hover{background:var(--ac2);transform:translateY(-1px)}
 .lnote{font-size:10px;color:var(--tx3);margin-top:12px;line-height:1.5}
 .lnkrow{margin-top:12px;display:flex;gap:12px;justify-content:center}
@@ -48,7 +48,7 @@ code{background:rgba(75,123,245,.18);color:var(--ac2);padding:1px 5px;border-rad
 .sf input{width:100%;background:var(--bg3);border:.5px solid var(--br);border-radius:7px;color:var(--tx);font-family:'Barlow',sans-serif;font-size:13px;padding:8px 11px;outline:none}
 .sf input:focus{border-color:var(--ac)}
 .btns{display:flex;gap:10px;margin-top:16px;flex-wrap:wrap}
-.btn-p{background:var(--ac);color:#fff;border:none;border-radius:8px;padding:9px 20px;font-family:'Barlow',sans-serif;font-size:12px;font-weight:600;cursor:pointer;transition:.2s}
+.btn-p{background:var(--ac);color:#fff;border:none;border-radius:8px;padding:9px 20px;font-family:'Barlow',sans-serif;font-size:12px;font-weight:600;cursor:pointer;transition:.2s;touch-action:manipulation;-webkit-tap-highlight-color:transparent}
 .btn-p:hover{background:var(--ac2)}
 .btn-s{background:var(--bg3);color:var(--tx2);border:.5px solid var(--br);border-radius:8px;padding:9px 20px;font-family:'Barlow',sans-serif;font-size:12px;cursor:pointer}
 
@@ -85,7 +85,7 @@ code{background:rgba(75,123,245,.18);color:var(--ac2);padding:1px 5px;border-rad
 .month-bar{display:flex;align-items:center;gap:10px;margin-bottom:14px;background:var(--bg2);padding:10px 14px;border-radius:12px;border:1px solid var(--br);flex-wrap:wrap;box-shadow:0 1px 4px rgba(0,0,0,.05)}
 .month-bar label{font-size:11px;font-weight:600;color:var(--tx2);white-space:nowrap}
 .month-btns{display:flex;gap:4px}
-.mbtn{padding:6px 14px;border-radius:7px;border:1px solid var(--br);background:var(--bg2);color:var(--tx2);font-family:'Barlow',sans-serif;font-size:12px;font-weight:500;cursor:pointer;transition:.2s}
+.mbtn{padding:6px 14px;border-radius:7px;border:1px solid var(--br);background:var(--bg2);color:var(--tx2);font-family:'Barlow',sans-serif;font-size:12px;font-weight:500;cursor:pointer;transition:.2s;touch-action:manipulation;-webkit-tap-highlight-color:transparent}
 .mbtn.active{background:var(--ac);color:#fff;border-color:var(--ac);box-shadow:0 2px 8px rgba(47,92,224,.3)}
 .mbtn:hover:not(.active){background:var(--bg3);color:var(--ac)}
 .ytd-badge{font-size:9px;background:rgba(75,123,245,.15);color:var(--ac2);border:.5px solid rgba(75,123,245,.3);padding:2px 7px;border-radius:100px;margin-left:6px}
@@ -203,12 +203,123 @@ code{background:rgba(75,123,245,.18);color:var(--ac2);padding:1px 5px;border-rad
   :root{--bg:#fff;--bg2:#f8f8f8;--bg3:#f0f0f0;--bg4:#e8e8e8;--tx:#111;--tx2:#444;--tx3:#777;--br:rgba(0,0,0,.12);--br2:rgba(0,0,0,.06);--wh:#000}
 }
 
+/* ── TABLET (820px) ── */
 @media(max-width:820px){
-  .hdr{grid-template-columns:auto 1fr}
-  .hright{grid-column:1/-1}
+  .hdr{grid-template-columns:auto 1fr;gap:10px}
+  .hright{grid-column:1/-1;flex-wrap:wrap;gap:6px}
+  .krow{flex-wrap:wrap}
+  .ki{min-width:100px}
   .rk4,.pk5{grid-template-columns:1fr 1fr}
-  .gg7{grid-template-columns:repeat(2,1fr)}
+  .gg7{grid-template-columns:repeat(3,1fr)}
   .r3,.r2,.r22{grid-template-columns:1fr}
+  .charts-row{grid-template-columns:1fr}
+}
+
+/* ── MOBILE (480px) ── */
+@media(max-width:480px){
+  /* Header */
+  #app{padding:8px 8px 80px}
+  .hdr{grid-template-columns:1fr;padding:10px 12px;gap:8px;border-radius:12px}
+  .hdr svg{display:none}
+  .htitle{font-size:15px}
+  .hsub{font-size:10px;gap:6px}
+  .hright{flex-direction:column;gap:6px;align-items:stretch}
+  .krow{display:grid;grid-template-columns:1fr 1fr;width:100%}
+  .ki{min-width:0;padding:8px 10px}
+  .kv{font-size:17px}
+  .kl{font-size:8px}
+  .btn-sync,.btn-out{width:100%;justify-content:center;text-align:center;padding:10px}
+
+  /* Files status bar */
+  #files-status{gap:6px;font-size:9px;padding:6px 10px}
+
+  /* Month selector */
+  .month-bar{padding:8px 10px;gap:6px}
+  .month-bar label{font-size:10px}
+  .mbtn{padding:7px 10px;font-size:11px;flex:1;text-align:center}
+  .month-btns{display:grid;grid-template-columns:repeat(4,1fr);gap:4px;width:100%}
+  .ytd-badge{width:100%;text-align:center}
+
+  /* Tabs — bottom navigation on mobile */
+  .tabs-nav{
+    position:fixed;bottom:0;left:0;right:0;z-index:100;
+    width:100%;border-radius:0;margin:0;padding:0;
+    display:flex;justify-content:stretch;
+    border-top:1px solid var(--br);border-bottom:none;border-left:none;border-right:none;
+    box-shadow:0 -4px 20px rgba(0,0,0,.1);
+    background:var(--bg2);
+  }
+  .tb{flex:1;border-radius:0;padding:10px 4px 12px;font-size:10px;display:flex;flex-direction:column;align-items:center;gap:2px}
+  .tb.active{background:transparent;color:var(--ac);border-top:2px solid var(--ac)}
+  .tb:hover:not(.active){background:rgba(0,0,0,.03)}
+
+  /* REDE tab */
+  .rk4{grid-template-columns:1fr 1fr;gap:7px;margin-bottom:10px}
+  .rkc{padding:10px 12px;border-radius:10px}
+  .rkv{font-size:20px}
+  .rkl{font-size:9px}
+  .rtbl-w{overflow-x:auto;-webkit-overflow-scrolling:touch}
+  .rt{font-size:11px}
+  .rt th{padding:7px 8px;font-size:8px}
+  .rt td{padding:7px 8px}
+  .r2{grid-template-columns:1fr;gap:8px}
+
+  /* Partner tab */
+  .sel-w{gap:6px;flex-direction:column;align-items:stretch}
+  .psel{min-width:0;width:100%}
+  .pk5{grid-template-columns:1fr 1fr;gap:7px}
+  .pk{padding:10px 10px}
+  .pkv{font-size:18px}
+  .pkl{font-size:8px}
+  .gg7{grid-template-columns:repeat(2,1fr);gap:6px}
+  .gc{padding:8px 4px 7px}
+  .r3,.r22{grid-template-columns:1fr;gap:8px}
+  .clist{gap:6px}
+  .cs{width:44px;font-size:10px}
+  .cp{width:50px;font-size:11px}
+  .ptw{overflow-x:auto;-webkit-overflow-scrolling:touch}
+  .ptbl{font-size:10px}
+  .ptbl th{padding:6px 8px;font-size:8px}
+  .ptbl td{padding:6px 8px}
+
+  /* Cards */
+  .card{border-radius:10px;margin-bottom:8px}
+  .ch{padding:7px 10px}
+  .ct{font-size:9px}
+  .cb{padding:10px}
+
+  /* Bloco headers */
+  .bh{margin-bottom:6px}
+  .bt{font-size:9px;padding:2px 6px}
+  .btt{font-size:11px}
+
+  /* Chips */
+  .chip{font-size:8px;padding:2px 5px}
+
+  /* Login screen */
+  .lcard{padding:28px 20px;margin:0 8px;border-radius:16px}
+  .ltitle{font-size:18px}
+  .lsub{font-size:12px;margin-bottom:20px}
+
+  /* Loading screen */
+  #loading-screen{padding:20px}
+
+  /* Selector */
+  #psel{font-size:12px;padding:8px 12px}
+
+  /* Btn export */
+  .btn-export{width:100%;justify-content:center;padding:10px}
+
+  /* Mapa tab */
+  #mapa-content .rtbl-w{overflow-x:auto;-webkit-overflow-scrolling:touch}
+}
+
+/* ── VERY SMALL (360px) ── */
+@media(max-width:360px){
+  .pk5{grid-template-columns:1fr 1fr}
+  .rk4{grid-template-columns:1fr 1fr}
+  .gg7{grid-template-columns:1fr 1fr}
+  .krow{grid-template-columns:1fr 1fr}
 }
 </style>
 </head>
@@ -307,9 +418,9 @@ code{background:rgba(75,123,245,.18);color:var(--ac2);padding:1px 5px;border-rad
   </div>
 
   <div class="tabs-nav">
-    <button class="tb active" onclick="switchTab('rede')">🏆 Resumo da Rede</button>
-    <button class="tb" onclick="switchTab('parceiro')">👤 Detalhe por Parceiro</button>
-    <button class="tb" onclick="switchTab('mapa')">📋 Mapa Sinistralidade</button>
+    <button class="tb active" onclick="switchTab('rede')"><span>🏆</span><span>Rede</span></button>
+    <button class="tb" onclick="switchTab('parceiro')"><span>👤</span><span>Parceiro</span></button>
+    <button class="tb" onclick="switchTab('mapa')"><span>📋</span><span>Sin.</span></button>
   </div>
 
   <!-- TAB REDE -->
